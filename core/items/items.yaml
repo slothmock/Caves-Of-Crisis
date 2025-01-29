@@ -1,0 +1,43 @@
+items:
+
+  ROCK:
+    name: Rock
+    description: A small, jagged rock.
+    stackable: true
+    max_stack: 2
+    effects:
+    rarity: common
+    icon_path: assets/img/items/rock.png
+
+  MUSHROOM:
+      name: Mushroom
+      description: A funky looking mushroom.
+      stackable: true
+      max_stack: 15
+      effects:
+        food: 3
+        water: 1
+      rarity: rare
+      icon_path: assets/img/items/mushroom.png
+
+  APPLE:
+    name: Apple
+    description: A juicy red apple. Not sure how it got here...
+    stackable: true
+    max_stack: 6
+    effects:
+      food: 15
+      water: 5
+    rarity: epic
+    icon_path: assets/img/items/apple.png
+
+  WATER_BOTTLE:
+    name: Water Bottle
+    description: A bottle of mineral water.
+    stackable: true
+    max_stack: 5
+    effects:
+      water: 25
+    rarity: legendary
+    icon_path: assets/img/items/water_bottle.png
+
