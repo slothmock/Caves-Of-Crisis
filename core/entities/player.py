@@ -19,7 +19,6 @@ class Player(BaseCharacter):
         self.view_radius = 2
         self.game_time = game_time
         self.message_log = message_log
-        self.last_move_time = 0
         self.status_effects = StatusEffects(message_log, game_time)
         self.is_wet = False
 
@@ -78,15 +77,12 @@ class Player(BaseCharacter):
         elif self.water > 50:
             self.recover_health(elapsed_minutes * 0.5)  # Moderate recovery rate
 
-        # Debugging for stat changes
-        self.log_stat_changes()
-
     def pass_out(self):
         """Handle the player passing out due to exhaustion."""
         self.message_log.add_message("You passed out from exhaustion!")
         self.recover_sleep(30)  # Recover some sleep
 
-    def log_stat_changes(self):
+    def log_stat_changes_debug(self):
         """
         Log the current state of the player's stats for debugging.
         """
@@ -123,29 +119,15 @@ class Player(BaseCharacter):
     # ------------------------------------------------------------------------
     def handle_movement_input(self, keys, now, game_map, other_entities):
         """Handle player movement with collision detection."""
-        if now - self.last_move_time > self.get_movement_interval():
-            return  # Skip movement if the interval hasn't passed
 
         dx, dy = self.get_direction_from_keys(keys)
         if dx != 0 or dy != 0:
             new_x, new_y = self.x + dx, self.y + dy
             self.attempt_move(new_x, new_y, game_map, other_entities)
-            self.last_move_time = now
-
-    def get_movement_interval(self):
-        """
-        Get the movement interval based on the type of player and status.
-        Returns 100 for standard Player.
-        """
-        return 100
 
     def get_direction_from_keys(self, keys):
-        """Translate keypresses into movement directions."""
-        dx, dy = 0, 0
-        if keys[pygame.K_w]: dy = -1
-        if keys[pygame.K_s]: dy = 1
-        if keys[pygame.K_a]: dx = -1
-        if keys[pygame.K_d]: dx = 1
+        dx = (keys[pygame.K_d] - keys[pygame.K_a])
+        dy = (keys[pygame.K_s] - keys[pygame.K_w]) 
         return dx, dy
 
     def attempt_move(self, x: int, y: int, game_map, other_entities: list) -> None:
@@ -167,9 +149,6 @@ class Player(BaseCharacter):
 
             # Handle collisions with other entities
             self.handle_entity_collisions(other_entities)
-
-            # Recalculate the field of view
-            # self.compute_fov(game_map)
 
             return True
 
@@ -269,21 +248,25 @@ class Player(BaseCharacter):
         Args:
             tile (Tile): The tile from which to pick up items.
         """
+        # Ensure the player is on the correct tile
+        if self.x != tile.x or self.y != tile.y:
+            self.message_log.add_message("You aren't standing on that tile.")
+            return
+
         if not tile.items:
             self.message_log.add_message("There's nothing here to pick up.")
             return
 
         for item in tile.items[:]:  # Iterate over a copy of the item list
-            if self.x == tile.x and self.y == tile.y:
-                # Try to add the item to the inventory
-                remaining_quantity = self.inventory.add_item(item, quantity=1)
+            remaining_quantity = self.inventory.add_item(item, quantity=1)
 
-                if remaining_quantity == 0:  # Successfully added the item
-                    tile.items.remove(item)
-                    self.message_log.add_message(f"Picked up {item.name}.")
-                else:  # Inventory is full, cannot pick up more
-                    self.message_log.add_message(f"No room for {item.name}.")
-                    break  # Stop trying to pick up additional items
+            if remaining_quantity == 0:  # Successfully added the item
+                tile.items.remove(item)
+                self.message_log.add_message(f"Picked up {item.name}.")
+            else:  # Inventory is full or cannot add the item
+                self.message_log.add_message(f"No room for {item.name}.")
+
+
 
 
     def use_item(self, item_name):

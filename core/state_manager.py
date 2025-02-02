@@ -53,7 +53,7 @@ class StateManager:
         elif current_state == GameStates.PAUSED:
             self.game.handle_paused_events(event, now)
         elif current_state == GameStates.GAME:
-            self.game.handle_game_events(event, now)
+            self.game.handle_game_events(event, now) 
         elif current_state == GameStates.DEV_MENU:
             self.game.dev_menu.handle_input(event, now)
         elif current_state == GameStates.DEV_CONSOLE:

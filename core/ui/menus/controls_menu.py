@@ -16,7 +16,7 @@ class HelpGuideMenu:
 
         screen_width = screen.get_width()
         self.options = [
-            MenuOption("TBA", 300, self.font, self.dummy_action, screen_width),
+            MenuOption("Cave Guide (TBA)", 300, self.font, self.dummy_action, screen_width),
             MenuOption("Back to Main Menu", 400, self.font, self.back_to_main_menu, screen_width),
         ]
 

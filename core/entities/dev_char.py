@@ -34,8 +34,8 @@ class Developer(Player):
         else:
             return super().update_status_effects()
         
-    def remmove_status_effect(self):
-        return
+    def log_stat_changes_debug(self):
+        return super().log_stat_changes_debug()
 
 
     # ------------------------------------------------------------------------

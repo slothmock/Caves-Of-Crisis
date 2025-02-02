@@ -1,7 +1,7 @@
 import json
 
 
-DEV_MODE = True
+DEV_MODE = False
 FPS = 60
 
 # Default settings
@@ -14,7 +14,7 @@ DEFAULT_SETTINGS = {
 # Logging Settings
 LOG_FILE = "game.log"
 
-GAME_VERSION = "v0.1" # TODO: Change on git push
+GAME_VERSION = "v0.1.1" # TODO: Change on git push
 AUTHOR_LABEL = "Created By slothmock"
 
 GAME_TITLE = "Caves Of Crisis"

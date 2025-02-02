@@ -168,17 +168,21 @@ class Game:
                 x=10, y=SCREEN_HEIGHT - 150, width=SCREEN_WIDTH - 15, height=130, font=self.mfont
             )
 
-            self.map = Map(self.tile_size, width=500, height=500)
+            self.map = Map(self.tile_size, width=1000, height=1000)
             self.seed = random.randint(0, 100000)
 
             # Generate the cave with progress updates
             self.current_progress = self.map.generate_cave(
                 screen=self.screen,
                 font=self.mfont,
-                progress=self.current_progress
+                step_progress=self.current_progress
             )
 
             player_x, player_y = self.map.find_walkable_tile()
+            if not self.map.can_move(player_x, player_y):  # Check if the tile is walkable
+                logger.error(f"Spawn point ({player_x}, {player_y}) is blocked! Finding a new position...")
+                player_x, player_y = self.map.find_walkable_tile()  # Try again
+                
             self.player = Developer(
                 x=player_x,
                 y=player_y,
@@ -223,6 +227,7 @@ class Game:
             )
 
             self.message_log.add_message("The adventure begins!")
+            self.loading = False
 
 
 
@@ -249,12 +254,12 @@ class Game:
         logger.debug("Game loop started.")
         while self.state_manager.current_state() != GameStates.QUIT_GAME:
             self.mouse_pos = pygame.mouse.get_pos()
-            delta_time = self.clock.tick(FPS)
+            now = self.clock.tick(FPS)
 
             if self.loading:
                 self.update_loading_screen()
             else:
-                self.state_manager.update(delta_time)
+                self.state_manager.update(now)
                 self.screen.fill((0, 0, 0))  # Clear the screen
                 self.state_manager.render()
                 pygame.display.flip()
@@ -263,7 +268,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.state_manager.push_state(GameStates.QUIT_GAME)
                 else:
-                    self.state_manager.handle_events(event, delta_time)
+                    self.state_manager.handle_events(event, now)
 
             self.time_system.update()
 
@@ -328,8 +333,8 @@ class Game:
             elif event.key == pygame.K_TAB:
                 self.inventory_ui.toggle()
             elif event.key == pygame.K_g:
-                tile_x, tile_y = self.player.x, self.player.y
-                tile = self.map.get_tile_at_xy(tile_x, tile_y)                            
+                tile = self.map.get_tile_at_xy(self.player.x, self.player.y)
+                         
                 self.player.pick_up_items_from_tile(tile)
 
             elif event.key == pygame.K_r and not self.player.is_resting:
@@ -395,10 +400,10 @@ class Game:
                 else:
                     self.message_log.add_message("You can't see anything here. The darkness feels oppressive.")
                     if not isinstance(self.player, Developer):
-                        self.message_log.add_message("-1 Sleep")
-                        self.player.expend_sleep(1)
+                        self.message_log.add_message("-2 Sleep")
+                        self.player.expend_sleep(2)
             else:
-                self.message_log.add_message("No tile under the cursor.")
+                self.message_log.add_message("You inventory is open. Close it to interact with tiles.")
         else:
             self.message_log.add_message("Mouse is outside the map bounds.")
 
@@ -449,25 +454,25 @@ class Game:
         """
         Handle input for the active GAME state.
         """
+        if self.loading == True: 
+            return
+
         if event.type == pygame.KEYDOWN:
             # Pause the game
             if event.key == pygame.K_ESCAPE:
                 self.state_manager.push_state(GameStates.PAUSED)
                 self.menu_manager.open_pause_menu()
 
-
-            # Handle player movement
-            if self.player:
-                keys = pygame.key.get_pressed()
-                self.player.handle_movement_input(keys, now, self.map, self.enemies)
-                self.handle_keydown(event)
-                if isinstance(self.player, Developer):
-                    if event.key == pygame.K_F1:
-                        self.toggle_debug_mode()
-                    elif event.key == pygame.K_F12:
-                        self.dev_menu.toggle()
-                    elif event.key == pygame.K_BACKQUOTE:
-                        self.dev_console.toggle()
+            keys = pygame.key.get_pressed()
+            self.player.handle_movement_input(keys, now, self.map, self.enemies)
+            self.handle_keydown(event)
+            if isinstance(self.player, Developer):
+                if event.key == pygame.K_F1:
+                    self.toggle_debug_mode()
+                elif event.key == pygame.K_F12:
+                    self.dev_menu.toggle()
+                elif event.key == pygame.K_BACKQUOTE:
+                    self.dev_console.toggle()
 
 
         if event.type == pygame.MOUSEBUTTONDOWN:
